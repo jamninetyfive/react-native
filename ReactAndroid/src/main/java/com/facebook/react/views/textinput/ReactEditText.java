@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -114,8 +114,7 @@ public class ReactEditText extends AppCompatEditText
 
   private ReactViewBackgroundManager mReactBackgroundManager;
 
-  private final @Nullable FabricViewStateManager mFabricViewStateManager =
-      new FabricViewStateManager();
+  private final FabricViewStateManager mFabricViewStateManager = new FabricViewStateManager();
   protected boolean mDisableTextDiffing = false;
 
   protected boolean mIsSettingTextFromState = false;
@@ -153,9 +152,9 @@ public class ReactEditText extends AppCompatEditText
       setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
-    ReactAccessibilityDelegate editTextAccessibilityDelegate =
-        new ReactAccessibilityDelegate(
-            this, this.isFocusable(), this.getImportantForAccessibility()) {
+    ViewCompat.setAccessibilityDelegate(
+        this,
+        new ReactAccessibilityDelegate() {
           @Override
           public boolean performAccessibilityAction(View host, int action, Bundle args) {
             if (action == AccessibilityNodeInfo.ACTION_CLICK) {
@@ -171,8 +170,7 @@ public class ReactEditText extends AppCompatEditText
             }
             return super.performAccessibilityAction(host, action, args);
           }
-        };
-    ViewCompat.setAccessibilityDelegate(this, editTextAccessibilityDelegate);
+        });
   }
 
   @Override
@@ -425,7 +423,7 @@ public class ReactEditText extends AppCompatEditText
   public void setSubmitBehavior(String submitBehavior) {
     mSubmitBehavior = submitBehavior;
   }
-
+  
   public void setDisableFullscreenUI(boolean disableFullscreenUI) {
     mDisableFullscreen = disableFullscreenUI;
     updateImeOptions();
@@ -778,9 +776,7 @@ public class ReactEditText extends AppCompatEditText
     // view, we don't need to construct one or apply it at all - it provides no use in Fabric.
     ReactContext reactContext = getReactContext(this);
 
-    if (mFabricViewStateManager != null
-        && !mFabricViewStateManager.hasStateWrapper()
-        && !reactContext.isBridgeless()) {
+    if (!mFabricViewStateManager.hasStateWrapper() && !reactContext.isBridgeless()) {
       final ReactTextInputLocalData localData = new ReactTextInputLocalData(this);
       UIManagerModule uiManager = reactContext.getNativeModule(UIManagerModule.class);
       if (uiManager != null) {
@@ -945,10 +941,6 @@ public class ReactEditText extends AppCompatEditText
     mReactBackgroundManager.setBorderColor(position, color, alpha);
   }
 
-  public int getBorderColor(int position) {
-    return mReactBackgroundManager.getBorderColor(position);
-  }
-
   public void setBorderRadius(float borderRadius) {
     mReactBackgroundManager.setBorderRadius(borderRadius);
   }
@@ -1016,7 +1008,7 @@ public class ReactEditText extends AppCompatEditText
    */
   private void updateCachedSpannable(boolean resetStyles) {
     // Noops in non-Fabric
-    if (mFabricViewStateManager != null && !mFabricViewStateManager.hasStateWrapper()) {
+    if (!mFabricViewStateManager.hasStateWrapper()) {
       return;
     }
     // If this view doesn't have an ID yet, we don't have a cache key, so bail here
