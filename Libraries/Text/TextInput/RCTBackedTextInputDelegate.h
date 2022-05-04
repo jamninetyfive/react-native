@@ -22,6 +22,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)textInputShouldReturn; // May be called right before `textInputShouldEndEditing` if "Return" button was pressed.
 - (void)textInputDidReturn;
 
+- (BOOL)textInputShouldSubmitOnReturn; // Checks whether to submit when return is pressed and emits an event if true.
+
 /*
  * Called before any change in the TextInput. The delegate has the opportunity to change the replacement string or reject the change completely.
  * To change the replacement, return the changed version of the `text`.

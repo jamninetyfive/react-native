@@ -426,9 +426,9 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
     }
   }
 
-  @ReactProp(name = "blurOnSubmit")
-  public void setBlurOnSubmit(ReactEditText view, @Nullable Boolean blurOnSubmit) {
-    view.setBlurOnSubmit(blurOnSubmit);
+  @ReactProp(name = "submitBehavior")
+  public void setSubmitBehavior(ReactEditText view, @Nullable String submitBehavior) {
+    view.setSubmitBehavior(submitBehavior);
   }
 
   @ReactProp(name = "onContentSizeChange", defaultBoolean = false)
@@ -1055,8 +1055,11 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
           @Override
           public boolean onEditorAction(TextView v, int actionId, KeyEvent keyEvent) {
             if ((actionId & EditorInfo.IME_MASK_ACTION) != 0 || actionId == EditorInfo.IME_NULL) {
-              boolean blurOnSubmit = editText.getBlurOnSubmit();
+              // boolean blurOnSubmit = editText.getBlurOnSubmit();
               boolean isMultiline = editText.isMultiline();
+
+              boolean shouldSubmit = editText.shouldSubmitOnReturn();
+              boolean shouldBlur = editText.shouldBlurOnReturn();
 
               // Motivation:
               // * blurOnSubmit && isMultiline => Clear focus; prevent default behaviour (return
@@ -1067,19 +1070,21 @@ public class ReactTextInputManager extends BaseViewManager<ReactEditText, Layout
               // * !blurOnSubmit && !isMultiline => Prevent default behaviour (return true).
               // Additionally we always generate a `submit` event.
 
-              EventDispatcher eventDispatcher = getEventDispatcher(reactContext, editText);
-              eventDispatcher.dispatchEvent(
-                  new ReactTextInputSubmitEditingEvent(
-                      reactContext.getSurfaceId(),
-                      editText.getId(),
-                      editText.getText().toString()));
+              if(shouldSubmit){
+                EventDispatcher eventDispatcher = getEventDispatcher(reactContext, editText);
+                eventDispatcher.dispatchEvent(
+                    new ReactTextInputSubmitEditingEvent(
+                        reactContext.getSurfaceId(),
+                        editText.getId(),
+                        editText.getText().toString()));
+              }
 
-              if (blurOnSubmit) {
+              if (shouldBlur) {
                 editText.clearFocus();
               }
 
               // Prevent default behavior except when we want it to insert a newline.
-              if (blurOnSubmit || !isMultiline) {
+              if (shouldBlur || shouldSubmit || !isMultiline) {
                 return true;
               }
 
